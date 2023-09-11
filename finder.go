@@ -1,5 +1,5 @@
 // Package finder looks for files and directories in an {fs.Fs} filesystem.
-package finder
+package locafero
 
 import (
 	"errors"
