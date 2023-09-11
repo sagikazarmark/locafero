@@ -11,12 +11,12 @@ import (
 )
 
 func Example() {
-	fsys := afero.NewOsFs()
+	fsys := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
 
 	finder := Finder{
 		Paths: []string{
-			"testdata/home/user",
-			"testdata/etc",
+			"home/user",
+			"etc",
 		},
 		Names: []string{"config.*"},
 		Type:  FileTypeFile,
@@ -29,7 +29,7 @@ func Example() {
 
 	fmt.Print(results)
 
-	// Output: [testdata/etc/config.yaml testdata/home/user/config.yaml]
+	// Output: [etc/config.yaml home/user/config.yaml]
 }
 
 func TestFinder_Find(t *testing.T) {
