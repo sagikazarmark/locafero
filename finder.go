@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-// Finder looks for files and directories in an [fs.Fs] filesystem.
+// Finder looks for files and directories in an [afero.Fs] filesystem.
 type Finder struct {
 	// Paths represents a list of locations that the [Finder] will search in.
 	//
@@ -28,7 +28,7 @@ type Finder struct {
 	// It provides the capability to search for entries with depth,
 	// meaning it can target deeper locations within the directory structure.
 	//
-	// It also supports glob syntax (as defined by [path.Match]), offering greater flexibility in search patterns.
+	// It also supports glob syntax (as defined by [filepat.Match]), offering greater flexibility in search patterns.
 	//
 	// Examples:
 	//   - config.yaml
@@ -42,7 +42,7 @@ type Finder struct {
 	Type FileType
 }
 
-// Find looks for files and directories in an [fs.Fs] filesystem.
+// Find looks for files and directories in an [afero.Fs] filesystem.
 func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 	// Arbitrary go routine limit (TODO: make this a parameter)
 	pool := pool.NewWithResults[[]string]().WithMaxGoroutines(5).WithErrors().WithFirstError()
