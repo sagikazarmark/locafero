@@ -5,10 +5,9 @@ import (
 	"errors"
 	"io/fs"
 	"path/filepath"
-	"sort"
 	"strings"
 
-	"github.com/sourcegraph/conc/pool"
+	"github.com/sourcegraph/conc/iter"
 	"github.com/spf13/afero"
 )
 
@@ -45,7 +44,14 @@ type Finder struct {
 // Find looks for files and directories in an [afero.Fs] filesystem.
 func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 	// Arbitrary go routine limit (TODO: make this a parameter)
-	pool := pool.NewWithResults[[]string]().WithMaxGoroutines(5).WithErrors().WithFirstError()
+	// pool := pool.NewWithResults[[]string]().WithMaxGoroutines(5).WithErrors().WithFirstError()
+
+	type searchItem struct {
+		path string
+		name string
+	}
+
+	var searchItems []searchItem
 
 	for _, searchPath := range f.Paths {
 		searchPath := searchPath
@@ -53,18 +59,32 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 		for _, searchName := range f.Names {
 			searchName := searchName
 
-			pool.Go(func() ([]string, error) {
-				// If the name contains any glob character, perform a glob match
-				if strings.ContainsAny(searchName, "*?[]\\^") {
-					return globWalkSearch(fsys, searchPath, searchName, f.Type)
-				}
+			searchItems = append(searchItems, searchItem{searchPath, searchName})
 
-				return statSearch(fsys, searchPath, searchName, f.Type)
-			})
+			// pool.Go(func() ([]string, error) {
+			// 	// If the name contains any glob character, perform a glob match
+			// 	if strings.ContainsAny(searchName, "*?[]\\^") {
+			// 		return globWalkSearch(fsys, searchPath, searchName, f.Type)
+			// 	}
+			//
+			// 	return statSearch(fsys, searchPath, searchName, f.Type)
+			// })
 		}
 	}
 
-	allResults, err := pool.Wait()
+	// allResults, err := pool.Wait()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	allResults, err := iter.MapErr(searchItems, func(item *searchItem) ([]string, error) {
+		// If the name contains any glob character, perform a glob match
+		if strings.ContainsAny(item.name, "*?[]\\^") {
+			return globWalkSearch(fsys, item.path, item.name, f.Type)
+		}
+
+		return statSearch(fsys, item.path, item.name, f.Type)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +96,7 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 	}
 
 	// Sort results in alphabetical order for now
-	sort.Strings(results)
+	// sort.Strings(results)
 
 	return results, nil
 }
