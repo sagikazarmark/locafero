@@ -29,7 +29,7 @@ func Example() {
 
 	fmt.Print(results)
 
-	// Output: [etc/config.yaml home/user/config.yaml]
+	// Output: [home/user/config.yaml etc/config.yaml]
 }
 
 func TestFinder_Find(t *testing.T) {
@@ -100,8 +100,8 @@ func TestFinder_Find(t *testing.T) {
 				Names: []string{"config.yaml"},
 			},
 			results: []string{
-				"etc/config.yaml",
 				"home/user/config.yaml",
+				"etc/config.yaml",
 			},
 		},
 		{
@@ -111,10 +111,10 @@ func TestFinder_Find(t *testing.T) {
 				Names: []string{"config", "config.yaml"},
 			},
 			results: []string{
-				"etc/config",
-				"etc/config.yaml",
 				"home/user/config",
 				"home/user/config.yaml",
+				"etc/config",
+				"etc/config.yaml",
 			},
 		},
 		{
@@ -124,8 +124,8 @@ func TestFinder_Find(t *testing.T) {
 				Names: []string{"config.yaml"},
 			},
 			results: []string{
-				"home/user/app/config.yaml",
 				"home/user/config.yaml",
+				"home/user/app/config.yaml",
 			},
 		},
 		{
@@ -136,8 +136,8 @@ func TestFinder_Find(t *testing.T) {
 				Type:  FileTypeFile,
 			},
 			results: []string{
-				"etc/config.yaml",
 				"home/user/config.yaml",
+				"etc/config.yaml",
 			},
 		},
 		{
@@ -148,8 +148,8 @@ func TestFinder_Find(t *testing.T) {
 				Type:  FileTypeDir,
 			},
 			results: []string{
-				"etc/config",
 				"home/user/config",
+				"etc/config",
 			},
 		},
 		{
@@ -159,12 +159,12 @@ func TestFinder_Find(t *testing.T) {
 				Names: []string{"config*"},
 			},
 			results: []string{
-				"etc/config",
-				"etc/config.json",
-				"etc/config.yaml",
 				"home/user/config",
 				"home/user/config.json",
 				"home/user/config.yaml",
+				"etc/config",
+				"etc/config.json",
+				"etc/config.yaml",
 			},
 		},
 		{
@@ -174,10 +174,10 @@ func TestFinder_Find(t *testing.T) {
 				Names: []string{"config.*"},
 			},
 			results: []string{
-				"etc/config.json",
-				"etc/config.yaml",
 				"home/user/config.json",
 				"home/user/config.yaml",
+				"etc/config.json",
+				"etc/config.yaml",
 			},
 		},
 		{
@@ -188,10 +188,10 @@ func TestFinder_Find(t *testing.T) {
 				Type:  FileTypeFile,
 			},
 			results: []string{
-				"etc/config.json",
-				"etc/config.yaml",
 				"home/user/config.json",
 				"home/user/config.yaml",
+				"etc/config.json",
+				"etc/config.yaml",
 			},
 		},
 		{
@@ -202,8 +202,8 @@ func TestFinder_Find(t *testing.T) {
 				Type:  FileTypeDir,
 			},
 			results: []string{
-				"etc/config",
 				"home/user/config",
+				"etc/config",
 			},
 		},
 		{
@@ -213,14 +213,14 @@ func TestFinder_Find(t *testing.T) {
 				Names: []string{"config*"},
 			},
 			results: []string{
-				"etc/config",
-				"etc/config.json",
-				"etc/config.yaml",
-				"etc/config/config.yaml",
 				"home/user/config",
 				"home/user/config.json",
 				"home/user/config.yaml",
 				"home/user/config/config.yaml",
+				"etc/config",
+				"etc/config.json",
+				"etc/config.yaml",
+				"etc/config/config.yaml",
 			},
 		},
 		{
@@ -231,12 +231,12 @@ func TestFinder_Find(t *testing.T) {
 				Type:  FileTypeFile,
 			},
 			results: []string{
-				"etc/config.json",
-				"etc/config.yaml",
-				"etc/config/config.yaml",
 				"home/user/config.json",
 				"home/user/config.yaml",
 				"home/user/config/config.yaml",
+				"etc/config.json",
+				"etc/config.yaml",
+				"etc/config/config.yaml",
 			},
 		},
 		{
@@ -247,8 +247,8 @@ func TestFinder_Find(t *testing.T) {
 				Type:  FileTypeDir,
 			},
 			results: []string{
-				"etc/config",
 				"home/user/config",
+				"etc/config",
 			},
 		},
 	}
