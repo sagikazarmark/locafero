@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/sourcegraph/conc v0.3.0
-	github.com/spf13/afero v1.9.5
+	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.4
 )
 
