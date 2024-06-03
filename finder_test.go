@@ -264,3 +264,26 @@ func TestFinder_Find(t *testing.T) {
 		})
 	}
 }
+
+func TestFinder_Find_RelativePaths(t *testing.T) {
+	fsys := afero.NewOsFs()
+
+	finder := Finder{
+		Paths: []string{
+			"testdata/home/user",
+			"testdata/etc",
+		},
+		Names: []string{"config.*"},
+		Type:  FileTypeFile,
+	}
+
+	results, err := finder.Find(fsys)
+	require.NoError(t, err)
+
+	expected := []string{
+		"testdata/home/user/config.yaml",
+		"testdata/etc/config.yaml",
+	}
+
+	assert.Equal(t, expected, results)
+}
