@@ -263,9 +263,25 @@ func TestFinder_Find(t *testing.T) {
 			results, err := tt.finder.Find(fsys)
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.results, results)
+			assert.Equal(t, tt.results, eachToSlash(results))
 		})
 	}
+}
+
+// eachToSlash converts all path separators to forward slashes.
+// This is useful for testing on Windows.
+func eachToSlash(paths []string) []string {
+	if paths == nil {
+		return nil
+	}
+
+	newPaths := make([]string, len(paths))
+
+	for i, p := range paths {
+		newPaths[i] = filepath.ToSlash(p)
+	}
+
+	return newPaths
 }
 
 func TestFinder_Find_RelativePaths(t *testing.T) {
@@ -288,7 +304,7 @@ func TestFinder_Find_RelativePaths(t *testing.T) {
 		"testdata/etc/config.yaml",
 	}
 
-	assert.Equal(t, expected, results)
+	assert.Equal(t, eachToSlash(expected), results)
 }
 
 func TestFinder_Find_AbsolutePaths(t *testing.T) {
