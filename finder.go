@@ -63,7 +63,7 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 
 			// pool.Go(func() ([]string, error) {
 			// 	// If the name contains any glob character, perform a glob match
-			// 	if strings.ContainsAny(searchName, "*?[]\\^") {
+			// 	if strings.ContainsAny(searchName, globMatch) {
 			// 		return globWalkSearch(fsys, searchPath, searchName, f.Type)
 			// 	}
 			//
@@ -79,7 +79,7 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 
 	allResults, err := iter.MapErr(searchItems, func(item *searchItem) ([]string, error) {
 		// If the name contains any glob character, perform a glob match
-		if strings.ContainsAny(item.name, "*?[]\\^") {
+		if strings.ContainsAny(item.name, globMatch) {
 			return globWalkSearch(fsys, item.path, item.name, f.Type)
 		}
 

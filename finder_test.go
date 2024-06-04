@@ -1,8 +1,8 @@
 package locafero
 
 import (
-	"fmt"
-	"path"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -10,26 +10,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Example() {
-	fsys := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
-
-	finder := Finder{
-		Paths: []string{
-			"/home/user",
-			"/etc",
-		},
-		Names: []string{"config.*"},
-		Type:  FileTypeFile,
+func toAbsOsPath(s string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join("C:", s)
 	}
 
-	results, err := finder.Find(fsys)
-	if err != nil {
-		panic(err)
+	return s
+}
+
+func eachToAbsOsPath(paths []string) []string {
+	if paths == nil {
+		return nil
 	}
 
-	fmt.Print(results)
+	newPaths := make([]string, len(paths))
 
-	// Output: [/home/user/config.yaml /etc/config.yaml]
+	for i, p := range paths {
+		newPaths[i] = toAbsOsPath(p)
+	}
+
+	return newPaths
+}
+
+func toOsPath(s string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Clean(s)
+	}
+
+	return s
+}
+
+func eachToOsPath(paths []string) []string {
+	if paths == nil {
+		return nil
+	}
+
+	newPaths := make([]string, len(paths))
+
+	for i, p := range paths {
+		newPaths[i] = toOsPath(p)
+	}
+
+	return newPaths
 }
 
 func TestFinder_Find(t *testing.T) {
@@ -50,12 +72,12 @@ func TestFinder_Find(t *testing.T) {
 	}
 
 	for _, file := range files {
-		dir := path.Dir(file)
+		dir := filepath.Dir(toAbsOsPath(file))
 
 		err := fsys.MkdirAll(dir, 0o777)
 		require.NoError(t, err)
 
-		_, err = fsys.Create(file)
+		_, err = fsys.Create(toAbsOsPath(file))
 		require.NoError(t, err)
 	}
 
@@ -257,10 +279,12 @@ func TestFinder_Find(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			tt.finder.Paths = eachToAbsOsPath(tt.finder.Paths)
+
 			results, err := tt.finder.Find(fsys)
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.results, results)
+			assert.Equal(t, eachToAbsOsPath(tt.results), results)
 		})
 	}
 }
@@ -283,6 +307,38 @@ func TestFinder_Find_RelativePaths(t *testing.T) {
 	expected := []string{
 		"testdata/home/user/config.yaml",
 		"testdata/etc/config.yaml",
+	}
+
+	assert.Equal(t, eachToOsPath(expected), results)
+}
+
+func TestFinder_Find_AbsolutePaths(t *testing.T) {
+	abs := func(t *testing.T, s string) string {
+		t.Helper()
+
+		a, err := filepath.Abs(s)
+		require.NoError(t, err)
+
+		return a
+	}
+
+	fsys := afero.NewOsFs()
+
+	finder := Finder{
+		Paths: []string{
+			abs(t, "testdata/home/user"),
+			abs(t, "testdata/etc"),
+		},
+		Names: []string{"config.*"},
+		Type:  FileTypeFile,
+	}
+
+	results, err := finder.Find(fsys)
+	require.NoError(t, err)
+
+	expected := []string{
+		abs(t, "testdata/home/user/config.yaml"),
+		abs(t, "testdata/etc/config.yaml"),
 	}
 
 	assert.Equal(t, expected, results)
