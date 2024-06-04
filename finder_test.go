@@ -77,7 +77,7 @@ func TestFinder_Find(t *testing.T) {
 		err := fsys.MkdirAll(dir, 0o777)
 		require.NoError(t, err)
 
-		_, err = fsys.Create(file)
+		_, err = fsys.Create(toAbsOsPath(file))
 		require.NoError(t, err)
 	}
 
