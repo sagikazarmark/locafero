@@ -3,6 +3,7 @@ package locafero
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -283,6 +284,38 @@ func TestFinder_Find_RelativePaths(t *testing.T) {
 	expected := []string{
 		"testdata/home/user/config.yaml",
 		"testdata/etc/config.yaml",
+	}
+
+	assert.Equal(t, expected, results)
+}
+
+func TestFinder_Find_AbsolutePaths(t *testing.T) {
+	abs := func(t *testing.T, s string) string {
+		t.Helper()
+
+		a, err := filepath.Abs(s)
+		require.NoError(t, err)
+
+		return a
+	}
+
+	fsys := afero.NewOsFs()
+
+	finder := Finder{
+		Paths: []string{
+			abs(t, "testdata/home/user"),
+			abs(t, "testdata/etc"),
+		},
+		Names: []string{"config.*"},
+		Type:  FileTypeFile,
+	}
+
+	results, err := finder.Find(fsys)
+	require.NoError(t, err)
+
+	expected := []string{
+		abs(t, "testdata/home/user/config.yaml"),
+		abs(t, "testdata/etc/config.yaml"),
 	}
 
 	assert.Equal(t, expected, results)
