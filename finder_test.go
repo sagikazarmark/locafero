@@ -2,8 +2,10 @@ package locafero
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -299,24 +301,56 @@ func TestFinder_Find_AbsolutePaths(t *testing.T) {
 		return a
 	}
 
-	fsys := afero.NewOsFs()
+	t.Run("abs", func(t *testing.T) {
+		fsys := afero.NewOsFs()
 
-	finder := Finder{
-		Paths: []string{
-			abs(t, "testdata/home/user"),
-			abs(t, "testdata/etc"),
-		},
-		Names: []string{"config.*"},
-		Type:  FileTypeFile,
-	}
+		finder := Finder{
+			Paths: []string{
+				abs(t, "testdata/home/user"),
+				abs(t, "testdata/etc"),
+			},
+			Names: []string{"config.*"},
+			Type:  FileTypeFile,
+		}
 
-	results, err := finder.Find(fsys)
-	require.NoError(t, err)
+		results, err := finder.Find(fsys)
+		require.NoError(t, err)
 
-	expected := []string{
-		abs(t, "testdata/home/user/config.yaml"),
-		abs(t, "testdata/etc/config.yaml"),
-	}
+		expected := []string{
+			abs(t, "testdata/home/user/config.yaml"),
+			abs(t, "testdata/etc/config.yaml"),
+		}
 
-	assert.Equal(t, expected, results)
+		assert.Equal(t, expected, results)
+	})
+
+	t.Run("wd", func(t *testing.T) {
+		fsys := afero.NewOsFs()
+
+		wd, err := os.Getwd()
+		require.NoError(t, err)
+
+		// Windows magic
+		wd = strings.TrimPrefix(wd, filepath.VolumeName(wd))
+		wd = filepath.ToSlash(wd)
+
+		finder := Finder{
+			Paths: []string{
+				path.Join(wd, "testdata/home/user"),
+				path.Join(wd, "testdata/etc"),
+			},
+			Names: []string{"config.*"},
+			Type:  FileTypeFile,
+		}
+
+		results, err := finder.Find(fsys)
+		require.NoError(t, err)
+
+		expected := []string{
+			abs(t, "testdata/home/user/config.yaml"),
+			abs(t, "testdata/etc/config.yaml"),
+		}
+
+		assert.Equal(t, expected, results)
+	})
 }
