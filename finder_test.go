@@ -1,16 +1,58 @@
 package locafero
 
 import (
-	"os"
-	"path"
 	"path/filepath"
-	"strings"
+	"runtime"
 	"testing"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func toAbsOsPath(s string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join("C:", s)
+	}
+
+	return s
+}
+
+func eachToAbsOsPath(paths []string) []string {
+	if paths == nil {
+		return nil
+	}
+
+	newPaths := make([]string, len(paths))
+
+	for i, p := range paths {
+		newPaths[i] = toAbsOsPath(p)
+	}
+
+	return newPaths
+}
+
+func toOsPath(s string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Clean(s)
+	}
+
+	return s
+}
+
+func eachToOsPath(paths []string) []string {
+	if paths == nil {
+		return nil
+	}
+
+	newPaths := make([]string, len(paths))
+
+	for i, p := range paths {
+		newPaths[i] = toOsPath(p)
+	}
+
+	return newPaths
+}
 
 func TestFinder_Find(t *testing.T) {
 	fsys := afero.NewMemMapFs()
@@ -30,7 +72,7 @@ func TestFinder_Find(t *testing.T) {
 	}
 
 	for _, file := range files {
-		dir := path.Dir(file)
+		dir := filepath.Dir(toAbsOsPath(file))
 
 		err := fsys.MkdirAll(dir, 0o777)
 		require.NoError(t, err)
@@ -237,28 +279,14 @@ func TestFinder_Find(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			tt.finder.Paths = eachToAbsOsPath(tt.finder.Paths)
+
 			results, err := tt.finder.Find(fsys)
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.results, eachToSlash(results))
+			assert.Equal(t, eachToAbsOsPath(tt.results), results)
 		})
 	}
-}
-
-// eachToSlash converts all path separators to forward slashes.
-// This is useful for testing on Windows.
-func eachToSlash(paths []string) []string {
-	if paths == nil {
-		return nil
-	}
-
-	newPaths := make([]string, len(paths))
-
-	for i, p := range paths {
-		newPaths[i] = filepath.ToSlash(p)
-	}
-
-	return newPaths
 }
 
 func TestFinder_Find_RelativePaths(t *testing.T) {
@@ -281,7 +309,7 @@ func TestFinder_Find_RelativePaths(t *testing.T) {
 		"testdata/etc/config.yaml",
 	}
 
-	assert.Equal(t, eachToSlash(expected), results)
+	assert.Equal(t, eachToOsPath(expected), results)
 }
 
 func TestFinder_Find_AbsolutePaths(t *testing.T) {
@@ -294,56 +322,24 @@ func TestFinder_Find_AbsolutePaths(t *testing.T) {
 		return a
 	}
 
-	t.Run("abs", func(t *testing.T) {
-		fsys := afero.NewOsFs()
+	fsys := afero.NewOsFs()
 
-		finder := Finder{
-			Paths: []string{
-				abs(t, "testdata/home/user"),
-				abs(t, "testdata/etc"),
-			},
-			Names: []string{"config.*"},
-			Type:  FileTypeFile,
-		}
+	finder := Finder{
+		Paths: []string{
+			abs(t, "testdata/home/user"),
+			abs(t, "testdata/etc"),
+		},
+		Names: []string{"config.*"},
+		Type:  FileTypeFile,
+	}
 
-		results, err := finder.Find(fsys)
-		require.NoError(t, err)
+	results, err := finder.Find(fsys)
+	require.NoError(t, err)
 
-		expected := []string{
-			abs(t, "testdata/home/user/config.yaml"),
-			abs(t, "testdata/etc/config.yaml"),
-		}
+	expected := []string{
+		abs(t, "testdata/home/user/config.yaml"),
+		abs(t, "testdata/etc/config.yaml"),
+	}
 
-		assert.Equal(t, expected, results)
-	})
-
-	t.Run("wd", func(t *testing.T) {
-		fsys := afero.NewOsFs()
-
-		wd, err := os.Getwd()
-		require.NoError(t, err)
-
-		// Windows magic
-		wd = strings.TrimPrefix(wd, filepath.VolumeName(wd))
-		wd = filepath.ToSlash(wd)
-
-		finder := Finder{
-			Paths: []string{
-				path.Join(wd, "testdata/home/user"),
-				path.Join(wd, "testdata/etc"),
-			},
-			Names: []string{"config.*"},
-			Type:  FileTypeFile,
-		}
-
-		results, err := finder.Find(fsys)
-		require.NoError(t, err)
-
-		expected := []string{
-			abs(t, "testdata/home/user/config.yaml"),
-			abs(t, "testdata/etc/config.yaml"),
-		}
-
-		assert.Equal(t, expected, results)
-	})
+	assert.Equal(t, expected, results)
 }
