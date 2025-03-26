@@ -3,7 +3,7 @@
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sagikazarmark/locafero/ci.yaml?style=flat-square)](https://github.com/sagikazarmark/locafero/actions/workflows/ci.yaml)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/mod/github.com/sagikazarmark/locafero)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/sagikazarmark/locafero?style=flat-square&color=61CFDD)
-[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/sagikazarmark/locafero)](https://deps.dev/go/github.com%252Fsagikazarmark%252Flocafero)
+[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/sagikazarmark/locafero?style=flat-square)](https://deps.dev/go/github.com%252Fsagikazarmark%252Flocafero)
 
 **Finder library for [Afero](https://github.com/spf13/afero) ported from [go-finder](https://github.com/sagikazarmark/go-finder).**
 
