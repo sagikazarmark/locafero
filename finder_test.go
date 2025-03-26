@@ -343,3 +343,24 @@ func TestFinder_Find_AbsolutePaths(t *testing.T) {
 
 	assert.Equal(t, expected, results)
 }
+
+func FuzzFinder_Find(f *testing.F) {
+	f.Add("test")     // A simple pattern
+	f.Add("*")        // A wildcard
+	f.Add("???[abc]") // Something with pattern syntax
+
+	f.Fuzz(func(t *testing.T, pattern string) {
+		fsys := afero.NewMemMapFs()
+
+		_ = afero.WriteFile(fsys, "foo.txt", []byte("Hello world"), 0o644)
+		_ = afero.WriteFile(fsys, "bar.txt", []byte("Hello again"), 0o644)
+
+		finder := Finder{
+			Paths: []string{""},
+			Names: []string{pattern},
+			Type:  FileTypeFile,
+		}
+
+		_, _ = finder.Find(fsys)
+	})
+}
