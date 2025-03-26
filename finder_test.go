@@ -349,7 +349,7 @@ func FuzzFinder_Find(f *testing.F) {
 	f.Add("*")        // A wildcard
 	f.Add("???[abc]") // Something with pattern syntax
 
-	f.Fuzz(func(t *testing.T, pattern string) {
+	f.Fuzz(func(_ *testing.T, pattern string) {
 		fsys := afero.NewMemMapFs()
 
 		_ = afero.WriteFile(fsys, "foo.txt", []byte("Hello world"), 0o644)
