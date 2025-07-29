@@ -59,21 +59,29 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 		}
 	}
 
-	allResults, err := p.Wait()
+	results, err := flatten(p.Wait())
 	if err != nil {
 		return nil, err
-	}
-
-	var results []string
-
-	for _, r := range allResults {
-		results = append(results, r...)
 	}
 
 	// Sort results in alphabetical order for now
 	// sort.Strings(results)
 
 	return results, nil
+}
+
+func flatten[T any](results [][]T, err error) ([]T, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	var flattened []T
+
+	for _, r := range results {
+		flattened = append(flattened, r...)
+	}
+
+	return flattened, nil
 }
 
 func globWalkSearch(
