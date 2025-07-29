@@ -31,7 +31,7 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Test
-        run: go test -race -v ./...
+        run: go test -count 10 -shuffle on -race -v ./...
 
   fuzz:
     name: Fuzz
