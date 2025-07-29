@@ -44,11 +44,11 @@ type Finder struct {
 // Find looks for files and directories in an [afero.Fs] filesystem.
 func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 	// Arbitrary go routine limit (TODO: make this a parameter)
-	p := pool.NewWithResults[[]string]().WithMaxGoroutines(5).WithErrors().WithFirstError()
+	p := pool.NewWithResults[[]searchResult]().WithMaxGoroutines(5).WithErrors().WithFirstError()
 
 	for _, searchPath := range f.Paths {
 		for _, searchName := range f.Names {
-			p.Go(func() ([]string, error) {
+			p.Go(func() ([]searchResult, error) {
 				// If the name contains any glob character, perform a glob match
 				if strings.ContainsAny(searchName, globMatch) {
 					return globWalkSearch(fsys, searchPath, searchName, f.Type)
@@ -59,15 +59,33 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 		}
 	}
 
-	results, err := flatten(p.Wait())
+	searchResults, err := flatten(p.Wait())
 	if err != nil {
 		return nil, err
 	}
 
-	// Sort results in alphabetical order for now
-	// sort.Strings(results)
+	// Return early if no results were found
+	if len(searchResults) == 0 {
+		return nil, nil
+	}
+
+	if false {
+		// Sort results in alphabetical order for now
+		// sort.Strings(results)
+	}
+
+	results := make([]string, 0, len(searchResults))
+
+	for _, searchResult := range searchResults {
+		results = append(results, searchResult.path)
+	}
 
 	return results, nil
+}
+
+type searchResult struct {
+	path string
+	info fs.FileInfo
 }
 
 func flatten[T any](results [][]T, err error) ([]T, error) {
@@ -89,8 +107,8 @@ func globWalkSearch(
 	searchPath string,
 	searchName string,
 	searchType FileType,
-) ([]string, error) {
-	var results []string
+) ([]searchResult, error) {
+	var results []searchResult
 
 	err := afero.Walk(fsys, searchPath, func(p string, fileInfo fs.FileInfo, err error) error {
 		if err != nil {
@@ -121,7 +139,7 @@ func globWalkSearch(
 		}
 
 		if match {
-			results = append(results, p)
+			results = append(results, searchResult{p, fileInfo})
 		}
 
 		return result
@@ -138,7 +156,7 @@ func statSearch(
 	searchPath string,
 	searchName string,
 	searchType FileType,
-) ([]string, error) {
+) ([]searchResult, error) {
 	filePath := filepath.Join(searchPath, searchName)
 
 	fileInfo, err := fsys.Stat(filePath)
@@ -154,5 +172,5 @@ func statSearch(
 		return nil, nil
 	}
 
-	return []string{filePath}, nil
+	return []searchResult{{filePath, fileInfo}}, nil
 }
