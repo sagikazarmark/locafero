@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func toAbsOsPath(s string) string {
@@ -75,13 +73,13 @@ func TestFinder_Find(t *testing.T) {
 		dir := filepath.Dir(toAbsOsPath(file))
 
 		err := fsys.MkdirAll(dir, 0o777)
-		require.NoError(t, err)
+		mustNotBeError(t, err)
 
 		_, err = fsys.Create(toAbsOsPath(file))
-		require.NoError(t, err)
+		mustNotBeError(t, err)
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		finder  Finder
 		results []string
@@ -275,16 +273,14 @@ func TestFinder_Find(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testCase.finder.Paths = eachToAbsOsPath(testCase.finder.Paths)
 
-		t.Run(tt.name, func(t *testing.T) {
-			tt.finder.Paths = eachToAbsOsPath(tt.finder.Paths)
+			results, err := testCase.finder.Find(fsys)
+			mustNotBeError(t, err)
 
-			results, err := tt.finder.Find(fsys)
-			require.NoError(t, err)
-
-			assert.Equal(t, eachToAbsOsPath(tt.results), results)
+			beEqual(t, eachToAbsOsPath(testCase.results), results)
 		})
 	}
 }
@@ -302,14 +298,14 @@ func TestFinder_Find_RelativePaths(t *testing.T) {
 	}
 
 	results, err := finder.Find(fsys)
-	require.NoError(t, err)
+	mustNotBeError(t, err)
 
 	expected := []string{
 		"testdata/home/user/config.yaml",
 		"testdata/etc/config.yaml",
 	}
 
-	assert.Equal(t, eachToOsPath(expected), results)
+	beEqual(t, eachToOsPath(expected), results)
 }
 
 func TestFinder_Find_AbsolutePaths(t *testing.T) {
@@ -317,7 +313,7 @@ func TestFinder_Find_AbsolutePaths(t *testing.T) {
 		t.Helper()
 
 		a, err := filepath.Abs(s)
-		require.NoError(t, err)
+		mustNotBeError(t, err)
 
 		return a
 	}
@@ -334,14 +330,14 @@ func TestFinder_Find_AbsolutePaths(t *testing.T) {
 	}
 
 	results, err := finder.Find(fsys)
-	require.NoError(t, err)
+	mustNotBeError(t, err)
 
 	expected := []string{
 		abs(t, "testdata/home/user/config.yaml"),
 		abs(t, "testdata/etc/config.yaml"),
 	}
 
-	assert.Equal(t, expected, results)
+	beEqual(t, expected, results)
 }
 
 func FuzzFinder_Find(f *testing.F) {
@@ -363,4 +359,35 @@ func FuzzFinder_Find(f *testing.F) {
 
 		_, _ = finder.Find(fsys)
 	})
+}
+
+func beEqual[T comparable](t *testing.T, expected, actual []T) {
+	t.Helper()
+
+	if len(expected) != len(actual) {
+		t.Errorf(
+			"expected both lists to be the same length\nwant: %d\ngot:  %d",
+			len(expected),
+			len(actual),
+		)
+	}
+
+	for i := range expected {
+		if expected[i] != actual[i] {
+			t.Errorf(
+				"expected %d. element to be equal\nwant: %v\ngot:  %v",
+				i+1,
+				expected[i],
+				actual[i],
+			)
+		}
+	}
+}
+
+func mustNotBeError(t *testing.T, err error) {
+	t.Helper()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 }
