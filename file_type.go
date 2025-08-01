@@ -7,14 +7,17 @@ type FileType int
 
 // FileType represents the kind of entries [Finder] can return.
 const (
-	FileTypeAll FileType = iota
+	FileTypeAny FileType = iota
 	FileTypeFile
 	FileTypeDir
+
+	// Deprecated: Use [FileTypeAny] instead.
+	FileTypeAll = FileTypeAny
 )
 
 func (ft FileType) match(info fs.FileInfo) bool {
 	switch ft {
-	case FileTypeAll:
+	case FileTypeAny:
 		return true
 
 	case FileTypeFile:
