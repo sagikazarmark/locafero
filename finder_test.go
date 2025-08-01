@@ -345,12 +345,12 @@ func FuzzFinder_Find(f *testing.F) {
 	f.Add("*")        // A wildcard
 	f.Add("???[abc]") // Something with pattern syntax
 
+	fsys := afero.NewMemMapFs()
+
+	_ = afero.WriteFile(fsys, "foo.txt", []byte("Hello world"), 0o644)
+	_ = afero.WriteFile(fsys, "bar.txt", []byte("Hello again"), 0o644)
+
 	f.Fuzz(func(_ *testing.T, pattern string) {
-		fsys := afero.NewMemMapFs()
-
-		_ = afero.WriteFile(fsys, "foo.txt", []byte("Hello world"), 0o644)
-		_ = afero.WriteFile(fsys, "bar.txt", []byte("Hello again"), 0o644)
-
 		finder := Finder{
 			Paths: []string{""},
 			Names: []string{pattern},
