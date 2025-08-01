@@ -69,11 +69,6 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 		return nil, nil
 	}
 
-	if false {
-		// Sort results in alphabetical order for now
-		// sort.Strings(results)
-	}
-
 	results := make([]string, 0, len(searchResults))
 
 	for _, searchResult := range searchResults {
