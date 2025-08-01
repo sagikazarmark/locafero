@@ -18,7 +18,7 @@ func (ft FileType) matchFileInfo(info fs.FileInfo) bool {
 		return true
 
 	case FileTypeFile:
-		return !info.IsDir()
+		return info.Mode().IsRegular()
 
 	case FileTypeDir:
 		return info.IsDir()
