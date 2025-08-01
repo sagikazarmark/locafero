@@ -12,7 +12,7 @@ const (
 	FileTypeDir
 )
 
-func (ft FileType) matchFileInfo(info fs.FileInfo) bool {
+func (ft FileType) match(info fs.FileInfo) bool {
 	switch ft {
 	case FileTypeAll:
 		return true

@@ -124,7 +124,7 @@ func globWalkSearch(
 		}
 
 		// Skip unmatching type
-		if !searchType.matchFileInfo(fileInfo) {
+		if !searchType.match(fileInfo) {
 			return result
 		}
 
@@ -163,7 +163,7 @@ func statSearch(
 	}
 
 	// Skip unmatching type
-	if !searchType.matchFileInfo(fileInfo) {
+	if !searchType.match(fileInfo) {
 		return nil, nil
 	}
 
