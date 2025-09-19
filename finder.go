@@ -4,7 +4,9 @@ package locafero
 import (
 	"errors"
 	"io/fs"
+	"iter"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -59,23 +61,62 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 		}
 	}
 
-	searchResults, err := flatten(q.Wait())
+	searchResults, err := q.Wait()
 	if err != nil {
 		return nil, err
 	}
 
-	// Return early if no results were found
-	if len(searchResults) == 0 {
-		return nil, nil
+	return slices.Collect(
+		Map(
+			Flatten(slices.Values(searchResults)),
+			func(r searchResult) string {
+				return r.path
+			},
+		),
+	), nil
+
+	// searchResults, err := flatten(q.Wait())
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // Return early if no results were found
+	// if len(searchResults) == 0 {
+	// 	return nil, nil
+	// }
+
+	// results := make([]string, 0, len(searchResults))
+
+	// for _, searchResult := range searchResults {
+	// 	results = append(results, searchResult.path)
+	// }
+
+	// return results, nil
+}
+
+// Map takes a Seq[T] and applies fn to each element, producing a Seq[V].
+func Map[T any, V any](seq iter.Seq[T], fn func(T) V) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		seq(func(t T) bool {
+			v := fn(t)
+			return yield(v)
+		})
 	}
+}
 
-	results := make([]string, 0, len(searchResults))
+// Flatten flattens Seq[[]T] into Seq[T]
+func Flatten[T any](outer iter.Seq[[]T]) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		outer(func(inner []T) bool {
+			for _, val := range inner {
+				if !yield(val) {
+					return false
+				}
+			}
 
-	for _, searchResult := range searchResults {
-		results = append(results, searchResult.path)
+			return true
+		})
 	}
-
-	return results, nil
 }
 
 type searchResult struct {
