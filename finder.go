@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sagikazarmark/locafero/internal/queue"
 	"github.com/spf13/afero"
+
+	"github.com/sagikazarmark/locafero/internal/queue"
 )
 
 // Finder looks for files and directories in an [afero.Fs] filesystem.

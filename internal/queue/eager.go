@@ -2,6 +2,7 @@ package queue
 
 import "sync"
 
+// NewEager creates a new eager queue.
 func NewEager[T any]() Queue[T] {
 	return &Eager[T]{}
 }
@@ -14,6 +15,7 @@ type Eager[T any] struct {
 	mu sync.Mutex
 }
 
+// Add implements the [Queue] interface.
 func (p *Eager[T]) Add(fn func() (T, error)) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -33,6 +35,7 @@ func (p *Eager[T]) Add(fn func() (T, error)) {
 	p.results = append(p.results, result)
 }
 
+// Wait implements the [Queue] interface.
 func (p *Eager[T]) Wait() ([]T, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
