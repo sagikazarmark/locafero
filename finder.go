@@ -7,8 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	// "github.com/sourcegraph/conc/pool"
-	"github.com/sagikazarmark/locafero/internal/pool"
+	"github.com/sagikazarmark/locafero/internal/queue"
 	"github.com/spf13/afero"
 )
 
@@ -44,13 +43,11 @@ type Finder struct {
 
 // Find looks for files and directories in an [afero.Fs] filesystem.
 func (f Finder) Find(fsys afero.Fs) ([]string, error) {
-	// Arbitrary go routine limit (TODO: make this a parameter)
-	// p := pool.NewWithResults[[]searchResult]().WithMaxGoroutines(5).WithErrors().WithFirstError()
-	p := pool.New[[]searchResult]()
+	q := queue.NewEager[[]searchResult]()
 
 	for _, searchPath := range f.Paths {
 		for _, searchName := range f.Names {
-			p.Go(func() ([]searchResult, error) {
+			q.Add(func() ([]searchResult, error) {
 				// If the name contains any glob character, perform a glob match
 				if strings.ContainsAny(searchName, globMatch) {
 					return globWalkSearch(fsys, searchPath, searchName, f.Type)
@@ -61,7 +58,7 @@ func (f Finder) Find(fsys afero.Fs) ([]string, error) {
 		}
 	}
 
-	searchResults, err := flatten(p.Wait())
+	searchResults, err := flatten(q.Wait())
 	if err != nil {
 		return nil, err
 	}
