@@ -55,7 +55,7 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Test
-        run: go test -race -v -fuzz=Fuzz -fuzztime=60s ./...
+        run: go test -race -v -fuzz=Fuzz -fuzztime=60s
 
   lint:
     name: Lint
