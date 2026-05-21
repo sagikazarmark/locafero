@@ -104,6 +104,22 @@ func TestFinder_Find(t *testing.T) {
 			results: nil,
 		},
 		{
+			name: "empty paths slice",
+			finder: Finder{
+				Paths: []string{},
+				Names: []string{"config.yaml"},
+			},
+			results: nil,
+		},
+		{
+			name: "empty names slice",
+			finder: Finder{
+				Paths: []string{"/home/user"},
+				Names: []string{},
+			},
+			results: nil,
+		},
+		{
 			name: "find in path",
 			finder: Finder{
 				Paths: []string{"/home/user"},
@@ -170,6 +186,34 @@ func TestFinder_Find(t *testing.T) {
 			results: []string{
 				"/home/user/config",
 				"/etc/config",
+			},
+		},
+		{
+			name: "file type mismatch dir",
+			finder: Finder{
+				Paths: []string{"/home/user"},
+				Names: []string{"config.yaml"},
+				Type:  FileTypeDir,
+			},
+			results: nil,
+		},
+		{
+			name: "dir type mismatch file",
+			finder: Finder{
+				Paths: []string{"/home/user"},
+				Names: []string{"config"},
+				Type:  FileTypeFile,
+			},
+			results: nil,
+		},
+		{
+			name: "non-existent path skipped",
+			finder: Finder{
+				Paths: []string{"/does/not/exist", "/home/user"},
+				Names: []string{"config.yaml"},
+			},
+			results: []string{
+				"/home/user/config.yaml",
 			},
 		},
 		{
